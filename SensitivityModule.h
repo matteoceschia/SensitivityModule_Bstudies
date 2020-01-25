@@ -107,7 +107,8 @@ typedef struct SensitivityEventStorage{
   double foil_projection_separation_; // How far apart would the vertices be if the tracks were projected back to the foil? Sometimes a track will not be reconstructed all the way back even if it really was from the foil
 
   double projection_distance_xy_; // Distance between the end of the track and the foil projected vertex, in the xy plane (ie ignoring distance along wires - gives an indication of how many hits were missed). There are 2 tracks in a good event, and we want the longer of the two distances.
-  int vertices_on_foil_; // How many tracks included a vertex on the foil?
+  int foil_vertex_count_; // How many tracks included a vertex on the foil?
+  int vertices_in_tracker_; // How many tracks included a vertex on the foil or on a wire?
   std::vector<bool> electrons_from_foil_; // For each electron, is the vertex on the foil?
   
   // For calculating probability of an  internal/external topology

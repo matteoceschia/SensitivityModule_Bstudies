@@ -147,7 +147,9 @@ filename_out : string[1] = "my_filename.root"
 
 **reco.projection_distance_xy** : How far in the xy plane we had to project our longest-projected track. Proxy for how many cells we are claiming to have a track, but where we didn’t reconstruct a hit. Could be replaced by a mapping of broken cells etc.
 
-**reco.vertices_on_foil** : Number of charged particle tracks with a vertex on the foil.
+**reco.foil_vertex_count** : Number of charged particle tracks with a vertex on the foil.
+
+**reco.vertices_in_tracker** : Number of charged particle tracks with a vertex on the foil or on the wires (was `reco.vertices_on_foil`).
 
 **reco.electrons_from_foil** : Vector of booleans corresponding to the electron candidates in descending order of energy. True if the electron candidate has a vertex on the source foil, false if not.
 

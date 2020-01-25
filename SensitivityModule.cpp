@@ -97,7 +97,9 @@ void SensitivityModule::initialize(const datatools::properties& myConfig,
   tree_->Branch("reco.vertex_separation",&sensitivity_.vertex_separation_);
   tree_->Branch("reco.foil_projection_separation",&sensitivity_.foil_projection_separation_);
   tree_->Branch("reco.projection_distance_xy",&sensitivity_.projection_distance_xy_);
-  tree_->Branch("reco.vertices_on_foil",&sensitivity_.vertices_on_foil_);
+  tree_->Branch("reco.foil_vertex_count",&sensitivity_.foil_vertex_count_);
+  //tree_->Branch("reco.vertices_on_foil",&sensitivity_.vertices_on_foil_);
+  tree_->Branch("reco.vertices_in_tracker",&sensitivity_.vertices_in_tracker_);
   tree_->Branch("reco.electrons_from_foil",&sensitivity_.electrons_from_foil_);
   tree_->Branch("reco.electron_vertex_x",&sensitivity_.electron_vertex_x_); // vector
   tree_->Branch("reco.electron_vertex_y",&sensitivity_.electron_vertex_y_); // vector
@@ -192,6 +194,7 @@ SensitivityModule::process(datatools::things& workItem) {
   double higherElectronEnergy=0;
   double lowerElectronEnergy=0;
   int verticesOnFoil=0;
+  int verticesInTracker=0;
   int firstVerticesOnFoil=0;
   double timeDelay=-1;
   bool is2electron=false;
@@ -229,6 +232,7 @@ SensitivityModule::process(datatools::things& workItem) {
   double projectedTrackLengthAlpha=0;
   double maxAlphaTime=-1;
   int caloHitCount=0;
+  int foilVertexCount=0;
   double highestGammaEnergy=0;
   double edgemostVertex=0;
   double distanceBetweenFoilGeigerCell=30.838;
@@ -409,9 +413,12 @@ SensitivityModule::process(datatools::things& workItem) {
 
         // First the vertex:
 
-        // Count the number of vertices on the foil
+        // Count the number of vertices on the foil or on the wires (aka vertices in the tracker)
+        if (trackDetails.HasTrackerVertex())verticesInTracker++;
+
+        // Count the number of vertices on the foil only
         if (trackDetails.HasFoilVertex())verticesOnFoil++;
-        
+
         // For all the tracks in the event, which one has its foilmost vertex nearest the tunnel/mountain
         // edge of the foil? We could use this to identify
         // Events so near the edge they can't make a 3-cell track
@@ -434,7 +441,7 @@ SensitivityModule::process(datatools::things& workItem) {
           // And we also want a vector of electron charges (they might be positrons)
           InsertAt(trackDetails.GetCharge(),electronCharges,pos);
           // And whether or not they are from the foil
-          InsertAt(trackDetails.HasFoilVertex(),electronsFromFoil,pos);
+          InsertAt(trackDetails.HasTrackerVertex(),electronsFromFoil,pos);
           // Vertices, directions, and vertices if projected back to foil
           InsertAt(trackDetails.GetFoilmostVertex(),electronVertices,pos);
           InsertAt(trackDetails.GetProjectedVertex(),electronProjVertices,pos);
@@ -453,7 +460,7 @@ SensitivityModule::process(datatools::things& workItem) {
           alphaVertices.push_back(trackDetails.GetFoilmostVertex());
           alphaDirections.push_back(trackDetails.GetDirection());
           alphaProjVertices.push_back(trackDetails.GetProjectedVertex());
-          if (trackDetails.HasFoilVertex()) foilAlphaCount++;
+          if (trackDetails.HasTrackerVertex()) foilAlphaCount++;
           // Time of first delayed hit
           trajClDelayedTime.push_back(trackDetails.GetDelayTime());
           delayedClusterHitCount = trackDetails.GetTrackerHitCount(); // This will get overwritten if there are 2+ alphas, is that really what we want?
@@ -712,9 +719,9 @@ SensitivityModule::process(datatools::things& workItem) {
       sensitivity_.same_side_of_foil_= ((sensitivity_.first_track_direction_x_ * sensitivity_.second_track_direction_x_) > 0); // X components both positive or both negative
     }
   // Vertices
-  sensitivity_.vertices_on_foil_=verticesOnFoil;
-  
-  
+  //sensitivity_.vertices_on_foil_=verticesOnFoil;
+  sensitivity_.foil_vertex_count_=verticesOnFoil;
+  sensitivity_.vertices_in_tracker_=verticesInTracker;
   sensitivity_.projection_distance_xy_=projectionDistanceXY;
   sensitivity_.foil_alpha_count_=foilAlphaCount;
   sensitivity_.electrons_from_foil_=electronsFromFoil;

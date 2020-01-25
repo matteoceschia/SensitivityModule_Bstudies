@@ -73,6 +73,7 @@ bool TrackDetails::Initialize()
   trackLength_ = the_trajectory.get_pattern().get_shape().get_length();
   
   // Get details about the vertex position
+  vertexInTracker_ = SetFoilmostVertex();
   vertexOnFoil_ = SetFoilmostVertex();
   if (SetDirection()) SetProjectedVertex(); // Can't project if no direction!
   
@@ -125,7 +126,7 @@ TVector3 TrackDetails::GenerateGammaTrackDirection(TrackDetails *electronTrack)
   if (!IsGamma()) return failVector; // One gamma and one electron
   if (!electronTrack->IsElectron()) return failVector;
   if (foilmostVertex_.x()==-9999 || electronTrack->GetFoilmostVertexX()==-9999) return failVector; // They need real vertex positions
-  if (!vertexOnFoil_) return failVector; // needs to share a vertex with an electron
+  if (!vertexInTracker_) return failVector; // needs to share a vertex with an electron
   direction_=(foilmostVertex_ - electronTrack->GetFoilmostVertex()).Unit();
   return direction_;
 }
@@ -293,15 +294,13 @@ bool TrackDetails::PopulateCaloHits()
       const geomtools::blur_spot & vertex = track_.get_vertices().at(iVertex).get();
       if (snemo::datamodel::particle_track::vertex_is_on_source_foil(vertex) || snemo::datamodel::particle_track::vertex_is_on_wire(vertex) )
       {
-        vertexOnFoil_ = true; // On wire OR foil - just not calo to calo gammas
+        vertexInTracker_ = true; // On wire OR foil - just not calo to calo gammas
       }
     }
   }
   
   return true;
 }
-
-
 
 // Return true if vertex is on the foil
 // Populate the inner vertex
@@ -331,6 +330,7 @@ bool TrackDetails::SetFoilmostVertex()
   }
   return hasVertexOnFoil;
 }
+
 // Populates the direction_ vector with the direction of the track at the foilmost end
 // Returns true if you managed to set it, false if not
 bool TrackDetails::SetDirection()
@@ -424,6 +424,10 @@ TVector3 TrackDetails::GetFoilmostVertex()
 bool TrackDetails::HasFoilVertex()
 {
   return vertexOnFoil_;
+}
+bool TrackDetails::HasTrackerVertex()
+{
+  return vertexInTracker_;  // was before vertexOnFoil_
 }
 // Foil-projected vertex
 double TrackDetails::GetProjectedVertexX()
