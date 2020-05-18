@@ -18,3 +18,4 @@ jobs:
         run: |
           env
           ls -larth /
+          which brew
