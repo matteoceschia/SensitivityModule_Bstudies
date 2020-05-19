@@ -1,21 +1,26 @@
 name: CI
 
 on:
-  push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
 
 jobs:
-  falaise-centos7:
+  build-and-test:
     runs-on: ubuntu-latest
-    container:
-      image: supernemo/falaise:latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Test where we are
-        run: |
-          env
-          ls -larth /
-          which brew
+    # Manually pull/start image/container due to its permission/USER.
+    - name: Pull Falaise Docker Image
+      run: docker pull supernemo/falaise-centos7-base:develop
+    - name: Create Docker Container
+      run: docker run -itd --name builder -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE supernemo/falaise-centos7-base:develop 
+    - name: Install Falaise@HEAD
+      run: docker exec builder bash -c "brew install falaise --HEAD --cc=gcc-7"   
+    # Now the actual build...
+    - uses: actions/checkout@v2
+    - name: Check our environment
+      run: |
+        docker exec builder bash -c "ls -larth $GITHUB_WORKSPACE"
+        docker exec builder bash -c "mkdir build"
+        docker exec builder bash -c "cd build && CC=gcc-7 CXX=g++-7 cmake $GITHUB_WORKSPACE && make"
+        
+        
