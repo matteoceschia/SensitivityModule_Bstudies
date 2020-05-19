@@ -31,6 +31,7 @@ class TrackDetails{
   TVector3 foilmostVertex_ ;
   TVector3 direction_;
   bool vertexOnFoil_=false;
+  bool vertexInTracker_=false;
   TVector3 projectedVertex_;
   enum Particle { ELECTRON, GAMMA, ALPHA, UNKNOWN };
   Particle particleType_=UNKNOWN;
@@ -111,6 +112,7 @@ public:
   double GetFoilmostVertexZ();
   TVector3 GetFoilmostVertex();
   bool HasFoilVertex();
+  bool HasTrackerVertex();
   bool TrackCrossesFoil();
   
   // Direction at foilmost end
