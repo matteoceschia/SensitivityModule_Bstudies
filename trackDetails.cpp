@@ -10,6 +10,7 @@ TrackDetails::TrackDetails(const geomtools::manager* geometry_manager, snemo::da
   
   foilmostVertex_.SetXYZ(-9999,-9999,-9999);
   direction_.SetXYZ(-9999,-9999,-9999);
+  direction_outer_.SetXYZ(-9999,-9999,-9999);
   projectedVertex_.SetXYZ(-9999,-9999,-9999);
   this->Initialize(geometry_manager, track);
 }
@@ -71,12 +72,24 @@ bool TrackDetails::Initialize()
   // Number of hits and lengths of track
   trackerHitCount_ = the_cluster.get_number_of_hits(); // Currently a track only contains 1 cluster
   trackLength_ = the_trajectory.get_pattern().get_shape().get_length();
+
+  // Track radius, if helical
+  if (the_trajectory.get_pattern().get_pattern_id()== "helix"){
+    //if (track_.has_associated_calorimeter_hits()){
+      const geomtools::helix_3d & helical_shape = (const geomtools::helix_3d&)the_trajectory.get_pattern().get_shape();
+      trackRadius_ = helical_shape.get_radius();
+    //}
+    //else{
+    //  trackRadius_ = -999;
+    //}
+  }
   
   // Get details about the vertex position
   vertexInTracker_ = SetFoilmostVertex();
   vertexOnFoil_ = SetFoilmostVertex();
   if (SetDirection()) SetProjectedVertex(); // Can't project if no direction!
-  
+  SetDirectionOuter(); //set the direction of outer tracks
+
   // ALPHA candidates are undefined charge particles associated with a delayed hit and no associated hit
   if (track_.get_charge()==snemo::datamodel::particle_track::UNDEFINED && !track_.has_associated_calorimeter_hits() && the_cluster.is_delayed()>0)
   {
@@ -379,6 +392,47 @@ bool TrackDetails::SetDirection()
   return true;
 }
 
+//Populate direction_outer_ vector in order to get momentum from energy
+bool TrackDetails::SetDirectionOuter()
+{
+  if ( !hasTrack_) return false;
+  if (GetTrackLength()==0 ) return false; // Makes no sense
+
+  if (!track_.has_trajectory()) return false; // Can't get the direction without a trajectory!
+  const snemo::datamodel::base_trajectory_pattern & the_base_pattern = track_.get_trajectory().get_pattern();
+  geomtools::vector_3d foilmost_end;
+  geomtools::vector_3d outermost_end;
+  
+  if (the_base_pattern.get_pattern_id()=="line") {
+    const geomtools::line_3d & the_shape = (const geomtools::line_3d&)the_base_pattern.get_shape();
+    // Find the two ends of the track
+    geomtools::vector_3d one_end=the_shape.get_first();
+    geomtools::vector_3d the_other_end=the_shape.get_last();
+    // which is which?
+    foilmost_end = ((TMath::Abs(one_end.x()) < TMath::Abs(the_other_end.x())) ? one_end: the_other_end);
+    outermost_end = ((TMath::Abs(one_end.x()) >= TMath::Abs(the_other_end.x())) ? one_end: the_other_end);
+    geomtools::vector_3d direction = the_shape.get_direction_on_curve(the_shape.get_first()); // Only the first stores the direction for a line track
+    int multiplier = (direction.x() * outermost_end.x() > 0)? 1: -1; // If the direction points the wrong way, reverse it
+    // This will always point outwards the foil
+    direction_outer_.SetXYZ(direction.x() * multiplier, direction.y() * multiplier, direction.z() * multiplier);
+  } //end line track
+  else {
+    const geomtools::helix_3d & the_shape = (const geomtools::helix_3d&)the_base_pattern.get_shape();
+    // Find the two ends of the track
+    geomtools::vector_3d one_end=the_shape.get_first();
+    geomtools::vector_3d the_other_end=the_shape.get_last();
+    // which is which?
+    foilmost_end = ((TMath::Abs(one_end.x()) < TMath::Abs(the_other_end.x())) ? one_end: the_other_end);
+    outermost_end = ((TMath::Abs(one_end.x()) >= TMath::Abs(the_other_end.x())) ? one_end: the_other_end);
+    
+    geomtools::vector_3d direction = the_shape.get_direction_on_curve(outermost_end); // Not the same on a curve
+    int multiplier = (direction.x() * outermost_end.x() > 0)? 1: -1; // If the direction points the wrong way, reverse it
+    // This will also point in towards the foil. Is that misleading in the case of a track that curves towards the foil and then out again? Not a problem when looking for bb events, but would it be misleading in cases of tracks from the wires?
+    direction_outer_.SetXYZ(direction.x() * multiplier, direction.y() * multiplier, direction.z() * multiplier);
+  }// end helix track
+  return true;
+}
+
 // Populate the projectedVertex_ vector with where the vertex would be if it were projected back to the foil
 // At the moment this uses a simple linear projection; would be better to project the helix
 // Return false if the vertex does not project back to the foil (track would not intersect foil or we don't have enough info)
@@ -463,7 +517,23 @@ TVector3 TrackDetails::GetDirection()
 {
   return direction_;
 }
-
+// Track direction at the outer vertex
+double TrackDetails::GetDirectionOuterX()
+{
+  return direction_outer_.X();
+}
+double TrackDetails::GetDirectionOuterY()
+{
+  return direction_outer_.Y();
+}
+double TrackDetails::GetDirectionOuterZ()
+{
+  return direction_outer_.Z();
+}
+TVector3 TrackDetails::GetDirectionOuter()
+{
+  return direction_outer_;
+}
 // Does the track cross the foil (really it shouldn't)
 bool TrackDetails::TrackCrossesFoil()
 {
@@ -582,7 +652,10 @@ int TrackDetails::GetTrackerHitCount()
 {
   return trackerHitCount_;
 }
-
+double TrackDetails::GetRadius()
+{
+  return trackRadius_;
+}
 
 // Does it make a track? (charged particle)
 bool TrackDetails::MakesTrack()

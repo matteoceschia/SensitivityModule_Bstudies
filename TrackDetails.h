@@ -30,6 +30,7 @@ const double FOIL_CELL_GAP=30.838; // From the foil to the first cell in mm
 class TrackDetails{
   TVector3 foilmostVertex_ ;
   TVector3 direction_;
+  TVector3 direction_outer_;
   bool vertexOnFoil_=false;
   bool vertexInTracker_=false;
   TVector3 projectedVertex_;
@@ -53,11 +54,13 @@ class TrackDetails{
   double projectedLength_=0;
   bool crossesFoil_=false;
   const geomtools::manager* geometry_manager_;
-
+  double trackRadius_ = 0;
   
   bool hasTrack_=false;
   bool SetFoilmostVertex();
   bool SetDirection();
+  bool SetDirectionOuter();
+
   bool SetProjectedVertex();
   bool PopulateCaloHits();
   double GetTotalTimeVariance(double thisTrackLength);
@@ -120,6 +123,12 @@ public:
   double GetDirectionY();
   double GetDirectionZ();
   TVector3 GetDirection();
+
+  // Direction at outermost end
+  double GetDirectionOuterX();
+  double GetDirectionOuterY();
+  double GetDirectionOuterZ();
+  TVector3 GetDirectionOuter();
   
   // Foil-projected vertex
   double GetProjectedVertexX();
@@ -134,6 +143,9 @@ public:
   int GetTrackerHitCount();
   double GetDelayTime();
   
+  // For helical tracks
+  double GetRadius();
+
   // For gammas, we need an electron track to calculate an assumed length
   double GenerateGammaTrackLengths(TrackDetails *electronTrack);
   TVector3 GenerateGammaTrackDirection(TrackDetails *electronTrack);

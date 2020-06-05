@@ -52,7 +52,7 @@ typedef struct SensitivityEventStorage{
   std::vector<double>* delayed_track_time_;
   std::vector<double> electron_track_lengths_;
   std::vector<int> electron_hit_counts_;
-
+  std::vector<double> electron_track_radii_;
 
   // Get vertex position of up to two tracks in mm
   double first_vertex_x_; // Foil is at x ~ 0, main calo walls are at +/- 434.994 mm according to flvisualize
@@ -79,6 +79,10 @@ typedef struct SensitivityEventStorage{
   std::vector<double> electron_dir_x_;
   std::vector<double> electron_dir_y_;
   std::vector<double> electron_dir_z_;
+  std::vector<double> electron_dir_out_x_;
+  std::vector<double> electron_dir_out_y_;
+  std::vector<double> electron_dir_out_z_;
+
   std::vector<double> electron_proj_vertex_x_;
   std::vector<double> electron_proj_vertex_y_;
   std::vector<double> electron_proj_vertex_z_;

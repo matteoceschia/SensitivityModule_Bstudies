@@ -79,10 +79,11 @@ void SensitivityModule::initialize(const datatools::properties& myConfig,
   tree_->Branch("reco.gamma_energies",&sensitivity_.gamma_energies_);
   tree_->Branch("reco.highest_gamma_energy",&sensitivity_.highest_gamma_energy_);
   
-  // Electron track lengths
+  // Electron track lengths and radii
   tree_->Branch("reco.electron_track_lengths",&sensitivity_.electron_track_lengths_);
   tree_->Branch("reco.electron_hit_counts",&sensitivity_.electron_hit_counts_);
-  
+  tree_->Branch("reco.electron_track_radii",&sensitivity_.electron_track_radii_);
+
   // Vertex positions (max 2 tracks)
   tree_->Branch("reco.first_vertex_x",&sensitivity_.first_vertex_x_);
   tree_->Branch("reco.first_vertex_y",&sensitivity_.first_vertex_y_);
@@ -107,6 +108,9 @@ void SensitivityModule::initialize(const datatools::properties& myConfig,
   tree_->Branch("reco.electron_dir_x",&sensitivity_.electron_dir_x_); // vector
   tree_->Branch("reco.electron_dir_y",&sensitivity_.electron_dir_y_); // vector
   tree_->Branch("reco.electron_dir_z",&sensitivity_.electron_dir_z_); // vector
+  tree_->Branch("reco.electron_dir_out_x",&sensitivity_.electron_dir_out_x_); // vector
+  tree_->Branch("reco.electron_dir_out_y",&sensitivity_.electron_dir_out_y_); // vector
+  tree_->Branch("reco.electron_dir_out_z",&sensitivity_.electron_dir_out_z_); // vector
   tree_->Branch("reco.electron_proj_vertex_x",&sensitivity_.electron_proj_vertex_x_); // vector
   tree_->Branch("reco.electron_proj_vertex_y",&sensitivity_.electron_proj_vertex_y_); // vector
   tree_->Branch("reco.electron_proj_vertex_z",&sensitivity_.electron_proj_vertex_z_); // vector
@@ -249,6 +253,7 @@ SensitivityModule::process(datatools::things& workItem) {
   std::vector<double> electronEnergies;
   std::vector<int> electronCharges;
   std::vector<double> electronTrackLengths;
+  std::vector<double> electronTrackRadii;
   std::vector<double> electronProjTrackLengths;
   std::vector<int> electronHitCounts;
   std::vector<bool> electronsFromFoil;
@@ -268,6 +273,7 @@ SensitivityModule::process(datatools::things& workItem) {
   
   std::vector<TVector3> electronVertices;
   std::vector<TVector3> electronDirections;
+  std::vector<TVector3> electronDirectionsOuter;
   std::vector<TVector3> electronProjVertices;
   std::vector<TVector3> alphaVertices;
   std::vector<TVector3> alphaDirections;
@@ -446,7 +452,11 @@ SensitivityModule::process(datatools::things& workItem) {
           InsertAt(trackDetails.GetFoilmostVertex(),electronVertices,pos);
           InsertAt(trackDetails.GetProjectedVertex(),electronProjVertices,pos);
           InsertAt(trackDetails.GetDirection(),electronDirections,pos);
+	  InsertAt(trackDetails.GetDirectionOuter(),electronDirectionsOuter,pos);
+          //std::cout << "DIR FROM SENS " << trackDetails.SetDirectionOuter() << std::endl;
           InsertAt(trackDetails.GetTrackLength(),electronTrackLengths,pos);
+	  InsertAt(trackDetails.GetRadius(), electronTrackRadii, pos);
+	  //cout<<"Radius is " << trackDetails.GetRadius() << endl;
           InsertAt(trackDetails.GetProjectedTrackLength(),electronProjTrackLengths,pos);
           InsertAt(trackDetails.GetTrackerHitCount(),electronHitCounts,pos);
         }
@@ -633,6 +643,9 @@ SensitivityModule::process(datatools::things& workItem) {
     sensitivity_.electron_dir_x_.push_back(electronDirections.at(i).X());
     sensitivity_.electron_dir_y_.push_back(electronDirections.at(i).Y());
     sensitivity_.electron_dir_z_.push_back(electronDirections.at(i).Z());
+    sensitivity_.electron_dir_out_x_.push_back(electronDirectionsOuter.at(i).X());
+    sensitivity_.electron_dir_out_y_.push_back(electronDirectionsOuter.at(i).Y());
+    sensitivity_.electron_dir_out_z_.push_back(electronDirectionsOuter.at(i).Z());
   }
 
   for (int i=0;i<alphaVertices.size();i++)
@@ -727,7 +740,7 @@ SensitivityModule::process(datatools::things& workItem) {
   sensitivity_.electrons_from_foil_=electronsFromFoil;
   sensitivity_.electron_track_lengths_=electronTrackLengths;
   sensitivity_.electron_hit_counts_=electronHitCounts;
-  
+  sensitivity_.electron_track_radii_ = electronTrackRadii; 
  
   // Timing
   sensitivity_.calo_hit_time_separation_=TMath::Abs(timeDelay);
@@ -938,6 +951,7 @@ double SensitivityModule::ProbabilityFromChiSquared(double chiSquared)
 void SensitivityModule::ResetVars()
 {
   sensitivity_.electron_track_lengths_.clear();
+  sensitivity_.electron_track_radii_.clear();
   sensitivity_.electron_vertex_x_.clear();
   sensitivity_.electron_vertex_y_.clear();
   sensitivity_.electron_vertex_z_.clear();
@@ -947,6 +961,9 @@ void SensitivityModule::ResetVars()
   sensitivity_.electron_dir_x_.clear();
   sensitivity_.electron_dir_y_.clear();
   sensitivity_.electron_dir_z_.clear();
+  sensitivity_.electron_dir_out_x_.clear();
+  sensitivity_.electron_dir_out_y_.clear();
+  sensitivity_.electron_dir_out_z_.clear();
   sensitivity_.alpha_vertex_x_.clear();
   sensitivity_.alpha_vertex_y_.clear();
   sensitivity_.alpha_vertex_z_.clear();
