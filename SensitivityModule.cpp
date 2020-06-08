@@ -76,6 +76,8 @@ void SensitivityModule::initialize(const datatools::properties& myConfig,
   tree_->Branch("reco.higher_electron_energy",&sensitivity_.higher_electron_energy_);
   tree_->Branch("reco.lower_electron_energy",&sensitivity_.lower_electron_energy_);
   tree_->Branch("reco.electron_energies",&sensitivity_.electron_energies_);
+  tree_->Branch("reco.electron_momenta",&sensitivity_.electron_momenta_);
+  tree_->Branch("reco.electron_transverse_momenta",&sensitivity_.electron_transverse_momenta_);
   tree_->Branch("reco.gamma_energies",&sensitivity_.gamma_energies_);
   tree_->Branch("reco.highest_gamma_energy",&sensitivity_.highest_gamma_energy_);
   
@@ -251,6 +253,8 @@ SensitivityModule::process(datatools::things& workItem) {
 
   std::vector<double> gammaEnergies;
   std::vector<double> electronEnergies;
+  std::vector<double> electronMomenta;
+  std::vector<double> electronTransverseMomenta;
   std::vector<int> electronCharges;
   std::vector<double> electronTrackLengths;
   std::vector<double> electronTrackRadii;
@@ -436,6 +440,8 @@ SensitivityModule::process(datatools::things& workItem) {
         if (trackDetails.IsElectron())
         {
           int pos=InsertAndGetPosition(trackDetails.GetEnergy(), electronEnergies, true);
+	  InsertAt(trackDetails.GetMomentum(), electronMomenta, pos);
+	  InsertAt(trackDetails.GetTransverseMomentum(), electronTransverseMomenta, pos);
           // Add energy to ordered list of electron energies (highest first)
           // and get where in the list it was added
           // Now add the type of the first hit to a vector (electrons are currently only allowed one hit)
@@ -614,6 +620,8 @@ SensitivityModule::process(datatools::things& workItem) {
   sensitivity_.passes_associated_calorimeters_ = passesAssociatedCalorimeters;
   sensitivity_.number_of_electrons_=electronCandidates.size();
   sensitivity_.electron_energies_=electronEnergies;
+  sensitivity_.electron_momenta_=electronMomenta;
+  sensitivity_.electron_transverse_momenta_=electronTransverseMomenta;
   sensitivity_.gamma_energies_=gammaEnergies;
   sensitivity_.electron_charges_=electronCharges;
 

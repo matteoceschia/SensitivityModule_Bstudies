@@ -100,6 +100,8 @@ public:
   // Energies
   double GetEnergy();
   double GetEnergySigma();
+  double GetMomentum();
+  double GetTransverseMomentum();
   double GetTime();
   double GetTimeSigma();
   double GetMainwallFraction();

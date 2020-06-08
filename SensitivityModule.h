@@ -47,6 +47,8 @@ typedef struct SensitivityEventStorage{
   double higher_electron_energy_;// MeVir
 
   std::vector<double> electron_energies_;
+  std::vector<double> electron_momenta_;
+  std::vector<double> electron_transverse_momenta_;
   std::vector<int> electron_charges_;
   std::vector<double> gamma_energies_;
   std::vector<double>* delayed_track_time_;

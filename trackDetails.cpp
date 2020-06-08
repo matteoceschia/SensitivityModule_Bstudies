@@ -78,11 +78,11 @@ bool TrackDetails::Initialize()
     //if (track_.has_associated_calorimeter_hits()){
       const geomtools::helix_3d & helical_shape = (const geomtools::helix_3d&)the_trajectory.get_pattern().get_shape();
       trackRadius_ = helical_shape.get_radius();
-    //}
-    //else{
-    //  trackRadius_ = -999;
-    //}
-  }
+    }
+    else{
+      trackRadius_ = -999;
+    }
+  //}
   
   // Get details about the vertex position
   vertexInTracker_ = SetFoilmostVertex();
@@ -577,6 +577,18 @@ double TrackDetails::GetEnergy()
 double TrackDetails::GetEnergySigma()
 {
   return (energySigma_);
+}
+
+double TrackDetails::GetMomentum()
+{
+  return (std::sqrt(energy_*energy_ - ELECTRON_MASS*ELECTRON_MASS));
+}
+
+double TrackDetails::GetTransverseMomentum()
+{
+  double p_x = GetMomentum() * GetDirectionOuterX();
+  double p_y = GetMomentum() * GetDirectionOuterY();
+  return (std::sqrt(p_x * p_x + p_y * p_y));
 }
 
 // For anything that hits the calo wall
