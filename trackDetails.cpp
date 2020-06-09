@@ -581,7 +581,7 @@ double TrackDetails::GetEnergySigma()
 
 double TrackDetails::GetMomentum()
 {
-  return (std::sqrt(energy_*energy_ - ELECTRON_MASS*ELECTRON_MASS));
+  return (std::sqrt((energy_ + ELECTRON_MASS)*(energy_ + ELECTRON_MASS) - ELECTRON_MASS*ELECTRON_MASS));
 }
 
 double TrackDetails::GetTransverseMomentum()
