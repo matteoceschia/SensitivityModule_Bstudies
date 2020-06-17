@@ -73,12 +73,21 @@ bool TrackDetails::Initialize()
   trackerHitCount_ = the_cluster.get_number_of_hits(); // Currently a track only contains 1 cluster
   trackLength_ = the_trajectory.get_pattern().get_shape().get_length();
 
+  //Get Chi-squared ratio for track fits, both lines and helices
+  //double chi2 = the_trajectory.get_auxiliaries().fetch_real("chi2");
+  //size_t ndof = the_trajectory.get_auxiliaries().fetch_integer("ndof");
+  //trackChi2ratio_ = chi2/ndof;
+
+
   // Track radius, if helical
   if (the_trajectory.get_pattern().get_pattern_id()== "helix"){
     //if (track_.has_associated_calorimeter_hits()){
       const geomtools::helix_3d & helical_shape = (const geomtools::helix_3d&)the_trajectory.get_pattern().get_shape();
       trackRadius_ = helical_shape.get_radius();
-    }
+      double chi2 = the_trajectory.get_auxiliaries().fetch_real("chi2");
+      size_t ndof = the_trajectory.get_auxiliaries().fetch_integer("ndof");
+      trackChi2ratio_ = chi2/ndof;
+  }
     else{
       trackRadius_ = -999;
     }
@@ -664,9 +673,15 @@ int TrackDetails::GetTrackerHitCount()
 {
   return trackerHitCount_;
 }
+
 double TrackDetails::GetRadius()
 {
   return trackRadius_;
+}
+
+double TrackDetails::GetChi2Ratio()
+{
+  return trackChi2ratio_;
 }
 
 // Does it make a track? (charged particle)

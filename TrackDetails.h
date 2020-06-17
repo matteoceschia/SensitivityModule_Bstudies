@@ -55,6 +55,7 @@ class TrackDetails{
   bool crossesFoil_=false;
   const geomtools::manager* geometry_manager_;
   double trackRadius_ = 0;
+  double trackChi2ratio_ = -999;
   
   bool hasTrack_=false;
   bool SetFoilmostVertex();
@@ -147,6 +148,7 @@ public:
   
   // For helical tracks
   double GetRadius();
+  double GetChi2Ratio();
 
   // For gammas, we need an electron track to calculate an assumed length
   double GenerateGammaTrackLengths(TrackDetails *electronTrack);

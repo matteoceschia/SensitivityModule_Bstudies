@@ -81,10 +81,11 @@ void SensitivityModule::initialize(const datatools::properties& myConfig,
   tree_->Branch("reco.gamma_energies",&sensitivity_.gamma_energies_);
   tree_->Branch("reco.highest_gamma_energy",&sensitivity_.highest_gamma_energy_);
   
-  // Electron track lengths and radii
+  // Electron track lengths and radii, and chi2/ndof for each track
   tree_->Branch("reco.electron_track_lengths",&sensitivity_.electron_track_lengths_);
   tree_->Branch("reco.electron_hit_counts",&sensitivity_.electron_hit_counts_);
   tree_->Branch("reco.electron_track_radii",&sensitivity_.electron_track_radii_);
+  tree_->Branch("reco.electron_chi2ratio", &sensitivity_.electron_track_chi2ratio_);
 
   // Vertex positions (max 2 tracks)
   tree_->Branch("reco.first_vertex_x",&sensitivity_.first_vertex_x_);
@@ -260,7 +261,8 @@ SensitivityModule::process(datatools::things& workItem) {
   std::vector<double> electronTrackRadii;
   std::vector<double> electronProjTrackLengths;
   std::vector<int> electronHitCounts;
-  std::vector<bool> electronsFromFoil;
+  std::vector<bool> electronsFromFoil; //had to change to int due to PyRoot conversion problems
+  std::vector<double> electronTrackChi2Ratio;
 
   std::vector<int> electronCaloType; // will be translated to the vectors for each type at the end
   std::vector<int> gammaCaloType; // will be translated to the vectors for each type at the end
@@ -453,7 +455,7 @@ SensitivityModule::process(datatools::things& workItem) {
           // And we also want a vector of electron charges (they might be positrons)
           InsertAt(trackDetails.GetCharge(),electronCharges,pos);
           // And whether or not they are from the foil
-          InsertAt(trackDetails.HasTrackerVertex(),electronsFromFoil,pos);
+          InsertAt(trackDetails.HasFoilVertex(),electronsFromFoil,pos);
           // Vertices, directions, and vertices if projected back to foil
           InsertAt(trackDetails.GetFoilmostVertex(),electronVertices,pos);
           InsertAt(trackDetails.GetProjectedVertex(),electronProjVertices,pos);
@@ -462,7 +464,7 @@ SensitivityModule::process(datatools::things& workItem) {
           //std::cout << "DIR FROM SENS " << trackDetails.SetDirectionOuter() << std::endl;
           InsertAt(trackDetails.GetTrackLength(),electronTrackLengths,pos);
 	  InsertAt(trackDetails.GetRadius(), electronTrackRadii, pos);
-	  //cout<<"Radius is " << trackDetails.GetRadius() << endl;
+	  InsertAt(trackDetails.GetChi2Ratio(), electronTrackChi2Ratio, pos);
           InsertAt(trackDetails.GetProjectedTrackLength(),electronProjTrackLengths,pos);
           InsertAt(trackDetails.GetTrackerHitCount(),electronHitCounts,pos);
         }
@@ -748,7 +750,8 @@ SensitivityModule::process(datatools::things& workItem) {
   sensitivity_.electrons_from_foil_=electronsFromFoil;
   sensitivity_.electron_track_lengths_=electronTrackLengths;
   sensitivity_.electron_hit_counts_=electronHitCounts;
-  sensitivity_.electron_track_radii_ = electronTrackRadii; 
+  sensitivity_.electron_track_radii_ = electronTrackRadii;
+  sensitivity_.electron_track_chi2ratio_ = electronTrackChi2Ratio;
  
   // Timing
   sensitivity_.calo_hit_time_separation_=TMath::Abs(timeDelay);
@@ -960,6 +963,7 @@ void SensitivityModule::ResetVars()
 {
   sensitivity_.electron_track_lengths_.clear();
   sensitivity_.electron_track_radii_.clear();
+  sensitivity_.electron_track_chi2ratio_.clear();
   sensitivity_.electron_vertex_x_.clear();
   sensitivity_.electron_vertex_y_.clear();
   sensitivity_.electron_vertex_z_.clear();
